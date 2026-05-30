@@ -35,7 +35,6 @@
             --glass-border: rgba(255, 255, 255, 0.25);
             --alice-blue: #f0f8ff;
             --deep-navy: #0a192f;
-            --deep-navy-glow: #1e3a5f;
         }
 
         body {
@@ -73,7 +72,6 @@
             }
         }
 
-        /* Loading Screen */
         .loading-screen {
             position: absolute;
             top: 0;
@@ -93,24 +91,51 @@
             pointer-events: none;
         }
 
+        .loading-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 160px;
+            height: 160px;
+        }
+
+        .loading-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top-color: var(--alice-blue);
+            border-right-color: var(--alice-blue);
+            border-radius: 50%;
+            animation: ringSpin 1.5s linear infinite;
+            box-shadow: 0 0 15px rgba(240, 248, 255, 0.4);
+        }
+
+        @keyframes ringSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .loading-text {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             color: var(--alice-blue);
             text-shadow: 0 0 20px var(--alice-blue);
-            animation: raimiGlow 2s infinite alternate ease-in-out;
+            animation: textGlow 2s infinite alternate ease-in-out;
+            z-index: 1;
             user-select: none;
         }
 
-        @keyframes raimiGlow {
+        @keyframes textGlow {
             0% {
                 text-shadow: 0 0 20px var(--alice-blue), 0 0 40px var(--alice-blue);
                 color: var(--alice-blue);
             }
             100% {
-                text-shadow: 0 0 20px var(--deep-navy-glow), 0 0 40px var(--deep-navy-glow);
-                color: var(--deep-navy-glow);
+                text-shadow: 0 0 20px var(--deep-navy), 0 0 40px var(--deep-navy);
+                color: var(--deep-navy);
             }
         }
 
@@ -175,11 +200,11 @@
             color: var(--date-separator-text);
             text-align: center;
             padding: 20px;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         .empty-state p {
             margin-top: 8px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             opacity: 0.6;
         }
 
@@ -211,8 +236,8 @@
         .bubble {
             padding: 12px 16px;
             border-radius: 18px;
-            font-size: 0.9rem;
-            line-height: 1.45;
+            font-size: 1rem;
+            line-height: 1.5;
             word-break: break-word;
             box-shadow: var(--bubble-shadow);
         }
@@ -252,9 +277,8 @@
             height: 40px;
             border-radius: 50%;
             cursor: pointer;
+            /* Solid background will be set via JS */
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 2px solid var(--glass-border);
             display: flex;
             align-items: center;
@@ -268,11 +292,7 @@
             transform: scale(0.92);
         }
         .sender-dot-inner {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            transition: background 0.25s ease;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            display: none; /* hidden – full color on button itself */
         }
 
         .sender-dot-btn.manual-mode {
@@ -315,7 +335,7 @@
             flex: 1;
             border: none;
             background: transparent;
-            font-size: 0.95rem;
+            font-size: 1rem;
             outline: none;
             padding: 8px 0;
             color: var(--text-color);
@@ -565,20 +585,6 @@
             margin-top: auto;
             margin-bottom: 20px;
         }
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.08);
-            margin: 6px 12px;
-            flex-shrink: 0;
-        }
-        .menu-action-btn.danger-btn {
-            color: var(--danger);
-            border-color: rgba(248, 113, 113, 0.3);
-        }
-        .menu-action-btn.danger-btn:hover {
-            background: rgba(248, 113, 113, 0.1);
-            border-color: var(--danger);
-        }
 
         .modal-overlay {
             display: none;
@@ -679,9 +685,11 @@
 </head>
 <body>
     <div class="phone-frame" id="app">
-        <!-- Loading Screen -->
         <div class="loading-screen" id="loadingScreen">
-            <div class="loading-text">Raimi</div>
+            <div class="loading-container">
+                <div class="loading-ring"></div>
+                <div class="loading-text">Raimi</div>
+            </div>
         </div>
 
         <div class="top-bar">
@@ -697,7 +705,7 @@
 
         <div class="input-bar">
             <div class="sender-toggle-container">
-                <div class="sender-dot-btn" id="senderDotBtn" title="Toggle auto / manual sender">
+                <div class="sender-dot-btn" id="senderDotBtn" title="Tap: auto↔manual | Double‑tap (manual): swap sender">
                     <div class="sender-dot-inner" id="senderDotInner"></div>
                 </div>
                 <span class="sender-mode-label auto" id="senderModeLabel">AUTO</span>
@@ -721,35 +729,18 @@
                 <div class="chat-list" id="chatList"></div>
             </div>
 
-            <div class="menu-divider"></div>
-            <button class="menu-action-btn" id="backupBtn">Backup Chats</button>
-            <button class="menu-action-btn" id="restoreBtn">Restore Backup</button>
-            <button class="menu-action-btn danger-btn" id="clearAllBtn">Clear All Chats</button>
             <button class="menu-action-btn" id="aboutMenuBtn">About</button>
         </div>
-
-        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
 
         <div class="context-menu" id="contextMenu"></div>
 
         <div class="modal-overlay" id="deleteModal">
             <div class="modal-card">
                 <h3>Delete chat?</h3>
-                <p>This will delete this conversation timeline permanently.</p>
+                <p>This will delete this conversation permanently.</p>
                 <div class="modal-actions">
                     <button class="modal-btn cancel" id="cancelDelBtn">Cancel</button>
                     <button class="modal-btn confirm-del" id="confirmDelBtn">Delete</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-overlay" id="clearAllModal">
-            <div class="modal-card">
-                <h3>Clear all chats?</h3>
-                <p>This will permanently erase every conversation and all messages.</p>
-                <div class="modal-actions">
-                    <button class="modal-btn cancel" id="cancelClearAllBtn">Cancel</button>
-                    <button class="modal-btn confirm-del" id="confirmClearAllBtn">Clear All</button>
                 </div>
             </div>
         </div>
@@ -773,18 +764,17 @@
 
     <script>
         (function() {
-            // Loading screen removal
+            // Loading screen – reduced to 3 seconds
             const loadingScreen = document.getElementById('loadingScreen');
             window.addEventListener('load', () => {
                 setTimeout(() => {
                     loadingScreen.classList.add('hidden');
-                    // Remove completely after transition
                     setTimeout(() => {
                         if (loadingScreen.parentNode) {
                             loadingScreen.parentNode.removeChild(loadingScreen);
                         }
                     }, 500);
-                }, 2000); // show for 2 seconds after full load
+                }, 3000);
             });
 
             const colorPairs = [
@@ -807,17 +797,10 @@
             const senderDotBtn = document.getElementById('senderDotBtn');
             const senderDotInner = document.getElementById('senderDotInner');
             const senderModeLabel = document.getElementById('senderModeLabel');
-            const backupBtn = document.getElementById('backupBtn');
-            const restoreBtn = document.getElementById('restoreBtn');
-            const restoreFileInput = document.getElementById('restoreFileInput');
-            const clearAllBtn = document.getElementById('clearAllBtn');
 
             const deleteModal = document.getElementById('deleteModal');
             const cancelDelBtn = document.getElementById('cancelDelBtn');
             const confirmDelBtn = document.getElementById('confirmDelBtn');
-            const clearAllModal = document.getElementById('clearAllModal');
-            const cancelClearAllBtn = document.getElementById('cancelClearAllBtn');
-            const confirmClearAllBtn = document.getElementById('confirmClearAllBtn');
 
             let rooms = [];
             let currentUnsavedRoom = null;
@@ -831,23 +814,15 @@
                     try {
                         const parsed = JSON.parse(saved);
                         rooms = parsed.rooms || [];
-                        const lastActive = parsed.activeRoomId || null;
-
-                        rooms.forEach(r => {
-                            if (r.manualSenderMode === undefined) r.manualSenderMode = false;
-                            if (r.manualSenderValue === undefined) r.manualSenderValue = 'blue';
-                        });
-
-                        if (rooms.length > 0) {
-                            activeRoomId = rooms.find(r => r.id === lastActive) ? lastActive : rooms[0].id;
-                            currentUnsavedRoom = null;
-                        } else {
-                            initiateTransientSession();
-                        }
-                        return;
-                    } catch (e) {}
+                    } catch (e) {
+                        rooms = [];
+                    }
                 }
                 initiateTransientSession();
+            }
+
+            function saveState() {
+                localStorage.setItem('offlineChatFinal', JSON.stringify({ rooms, activeRoomId: null }));
             }
 
             function initiateTransientSession() {
@@ -863,10 +838,6 @@
                     manualSenderValue: 'blue'
                 };
                 activeRoomId = 'unsaved';
-            }
-
-            function saveState() {
-                localStorage.setItem('offlineChatFinal', JSON.stringify({ rooms, activeRoomId }));
             }
 
             function getActiveRoom() {
@@ -901,7 +872,7 @@
 
             function refreshChatUI() {
                 const room = getActiveRoom();
-                if (!room || room.messages.length === 0) {
+                if (!room || !room.messages || room.messages.length === 0) {
                     renderEmptyState();
                 } else {
                     renderAllMessages(room.messages, colorPairs[0]);
@@ -970,11 +941,9 @@
                 const effectiveSender = getEffectiveSender(room);
                 const cp = colorPairs[0];
 
-                if (effectiveSender === 'blue') {
-                    senderDotInner.style.background = cp.blue;
-                } else {
-                    senderDotInner.style.background = cp.brown;
-                }
+                // Full‑color button: background set to current sender color
+                senderDotBtn.style.background = effectiveSender === 'blue' ? cp.blue : cp.brown;
+                senderDotInner.style.display = 'none'; // hidden, button itself is the indicator
 
                 if (room.manualSenderMode) {
                     senderDotBtn.classList.add('manual-mode');
@@ -987,16 +956,41 @@
                 }
             }
 
-            senderDotBtn.addEventListener('click', () => {
+            // Double‑tap logic for manual mode
+            let tapTimer = null;
+            let waitingForDouble = false;
+            const DOUBLE_TAP_DELAY = 300; // ms
+
+            senderDotBtn.addEventListener('click', (e) => {
                 const room = getActiveRoom();
                 if (!room) return;
 
-                room.manualSenderMode = !room.manualSenderMode;
                 if (!room.manualSenderMode) {
-                    room.manualSenderValue = room.isBlueTurn ? 'blue' : 'brown';
+                    // Auto mode → single tap enables manual mode
+                    room.manualSenderMode = true;
+                    updateSenderUI();
+                    if (activeRoomId !== 'unsaved') saveState();
+                } else {
+                    // Manual mode: distinguish single vs double tap
+                    if (waitingForDouble) {
+                        // Second tap → swap sender
+                        clearTimeout(tapTimer);
+                        waitingForDouble = false;
+                        room.manualSenderValue = room.manualSenderValue === 'blue' ? 'brown' : 'blue';
+                        updateSenderUI();
+                        if (activeRoomId !== 'unsaved') saveState();
+                    } else {
+                        // First tap → start timer for single tap (disable manual)
+                        waitingForDouble = true;
+                        tapTimer = setTimeout(() => {
+                            waitingForDouble = false;
+                            room.manualSenderMode = false;
+                            room.manualSenderValue = room.isBlueTurn ? 'blue' : 'brown';
+                            updateSenderUI();
+                            if (activeRoomId !== 'unsaved') saveState();
+                        }, DOUBLE_TAP_DELAY);
+                    }
                 }
-                updateSenderUI();
-                saveState();
             });
 
             let longTimer;
@@ -1194,6 +1188,7 @@
             }
 
             function initiateDeleteRoom(roomId) {
+                activeRenameRoomId = null;
                 roomToDeleteId = roomId;
                 deleteModal.classList.add('open');
             }
@@ -1293,76 +1288,26 @@
             newChatMenuBtn.addEventListener('click', handleNewRoomTrigger);
             topNewChatBtn.addEventListener('click', handleNewRoomTrigger);
 
-            aboutMenuBtn.addEventListener('click', () => aboutModal.classList.add('open'));
+            aboutMenuBtn.addEventListener('click', () => {
+                activeRenameRoomId = null;
+                aboutModal.classList.add('open');
+            });
             closeAboutBtn.addEventListener('click', () => aboutModal.classList.remove('open'));
 
-            backupBtn.addEventListener('click', () => {
-                const data = JSON.stringify({ rooms, activeRoomId }, null, 2);
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `chat-backup-${new Date().toISOString().slice(0,10)}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                sideMenu.classList.remove('open');
-                menuOverlay.classList.remove('open');
-            });
-
-            restoreBtn.addEventListener('click', () => {
-                restoreFileInput.click();
-                sideMenu.classList.remove('open');
-                menuOverlay.classList.remove('open');
-            });
-
-            restoreFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    try {
-                        const parsed = JSON.parse(evt.target.result);
-                        if (parsed.rooms && Array.isArray(parsed.rooms)) {
-                            rooms = parsed.rooms;
-                            rooms.forEach(r => {
-                                if (r.manualSenderMode === undefined) r.manualSenderMode = false;
-                                if (r.manualSenderValue === undefined) r.manualSenderValue = 'blue';
-                            });
-                            activeRoomId = parsed.activeRoomId || (rooms.length > 0 ? rooms[0].id : null);
-                            if (!activeRoomId || !rooms.find(r => r.id === activeRoomId)) {
-                                if (rooms.length > 0) activeRoomId = rooms[0].id;
-                                else initiateTransientSession();
-                            }
-                            currentUnsavedRoom = null;
-                            saveState();
-                            refreshChatUI();
-                            alert('Chats restored successfully!');
-                        } else {
-                            alert('Invalid backup file format.');
-                        }
-                    } catch (err) {
-                        alert('Failed to parse backup file.');
+            // Escape closes menus/modals
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    sideMenu.classList.remove('open');
+                    menuOverlay.classList.remove('open');
+                    deleteModal.classList.remove('open');
+                    aboutModal.classList.remove('open');
+                    hideContextMenu();
+                    closeAllDropdowns();
+                    if (activeRenameRoomId) {
+                        activeRenameRoomId = null;
+                        renderChatList();
                     }
-                };
-                reader.readAsText(file);
-                restoreFileInput.value = '';
-            });
-
-            clearAllBtn.addEventListener('click', () => {
-                clearAllModal.classList.add('open');
-                sideMenu.classList.remove('open');
-                menuOverlay.classList.remove('open');
-            });
-
-            cancelClearAllBtn.addEventListener('click', () => clearAllModal.classList.remove('open'));
-            confirmClearAllBtn.addEventListener('click', () => {
-                rooms = [];
-                initiateTransientSession();
-                clearAllModal.classList.remove('open');
-                localStorage.removeItem('offlineChatFinal');
-                refreshChatUI();
+                }
             });
 
             loadState();
